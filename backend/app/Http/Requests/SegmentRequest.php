@@ -6,19 +6,18 @@ use App\Models\Segment;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
-class SegmentRequest extends FormRequest
-{
-    public function authorize(): bool
-    {
+class SegmentRequest extends FormRequest {
+    public function authorize(): bool {
         return $this->user() !== null;
     }
 
     /** @return array<string, array<mixed>> */
-    public function rules(): array
-    {
+    public function rules(): array {
         return [
             'script_id' => ['missing'],
             'ai_translation' => ['prohibited'],
+            'ai_generation_id' => ['prohibited'],
+            'ai_source_version' => ['prohibited'],
             'sequence' => ['required', 'integer', 'min:1', 'max:4294967295'],
             'timecode_start' => ['nullable', 'string', 'regex:/^(?:\d{1,4}:[0-5]\d|[0-5]?\d):[0-5]\d(?:\.\d{1,3})?$/'],
             'timecode_end' => ['nullable', 'string', 'regex:/^(?:\d{1,4}:[0-5]\d|[0-5]?\d):[0-5]\d(?:\.\d{1,3})?$/'],
@@ -35,8 +34,7 @@ class SegmentRequest extends FormRequest
         ];
     }
 
-    public function after(): array
-    {
+    public function after(): array {
         return [function ($validator): void {
             $start = $this->input('timecode_start');
             $end = $this->input('timecode_end');
@@ -59,8 +57,7 @@ class SegmentRequest extends FormRequest
         }];
     }
 
-    private function milliseconds(string $timecode): int
-    {
+    private function milliseconds(string $timecode): int {
         $parts = explode(':', $timecode);
         $seconds = (float) array_pop($parts);
         $minutes = (int) array_pop($parts);

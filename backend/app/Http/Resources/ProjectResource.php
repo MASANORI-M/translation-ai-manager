@@ -5,11 +5,9 @@ namespace App\Http\Resources;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class ProjectResource extends JsonResource
-{
+class ProjectResource extends JsonResource {
     /** @return array<string, mixed> */
-    public function toArray(Request $request): array
-    {
+    public function toArray(Request $request): array {
         return [
             'id' => $this->id,
             'user_id' => $this->user_id,
@@ -21,7 +19,9 @@ class ProjectResource extends JsonResource
             'rate_type' => $this->rate_type,
             'rate' => $this->rate,
             'currency' => $this->currency,
+            'usd_jpy_rate' => $this->usd_jpy_rate,
             'status' => $this->status,
+            'api_usage_cost' => $this->whenHas('api_usage_cost'),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];

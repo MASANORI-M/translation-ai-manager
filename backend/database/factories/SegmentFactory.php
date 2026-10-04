@@ -7,11 +7,9 @@ use App\Models\Segment;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /** @extends Factory<Segment> */
-class SegmentFactory extends Factory
-{
+class SegmentFactory extends Factory {
     /** @return array<string, mixed> */
-    public function definition(): array
-    {
+    public function definition(): array {
         return [
             'script_id' => Script::factory(),
             'sequence' => 1,

@@ -9,19 +9,16 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
-class SegmentManagementTest extends TestCase
-{
+class SegmentManagementTest extends TestCase {
     use RefreshDatabase;
 
-    protected function setUp(): void
-    {
+    protected function setUp(): void {
         parent::setUp();
-        $this->withHeaders(['Origin' => 'http://localhost:5173']);
+        $this->withHeaders(['Origin' => 'http://localhost:3000']);
     }
 
     /** @return array<string, mixed> */
-    private function payload(array $overrides = []): array
-    {
+    private function payload(array $overrides = []): array {
         return [...[
             'sequence' => 1,
             'timecode_start' => '00:26:58',
@@ -34,8 +31,7 @@ class SegmentManagementTest extends TestCase
         ], ...$overrides];
     }
 
-    public function test_all_segment_endpoints_require_authentication(): void
-    {
+    public function test_all_segment_endpoints_require_authentication(): void {
         $segment = Segment::factory()->create();
         $base = "/api/projects/{$segment->script->project_id}/scripts/{$segment->script_id}/segments";
         $this->getJson($base)->assertUnauthorized();
@@ -45,8 +41,7 @@ class SegmentManagementTest extends TestCase
         $this->deleteJson("$base/{$segment->id}")->assertUnauthorized();
     }
 
-    public function test_create_list_read_update_delete_word_count_and_progress(): void
-    {
+    public function test_create_list_read_update_delete_word_count_and_progress(): void {
         $script = Script::factory()->create(['word_count' => 10, 'rate' => '1.800000']);
         $this->actingAs($script->project->user, 'web');
         $base = "/api/projects/{$script->project_id}/scripts/{$script->id}/segments";
@@ -74,8 +69,7 @@ class SegmentManagementTest extends TestCase
         $this->getJson("/api/projects/{$script->project_id}/scripts/{$script->id}")->assertJsonPath('data.word_count', 8)->assertJsonPath('data.progress.total', 1);
     }
 
-    public function test_editor_pages_segments_in_ascending_sequence(): void
-    {
+    public function test_editor_pages_segments_in_ascending_sequence(): void {
         $script = Script::factory()->create();
         foreach (range(1, 23) as $sequence) {
             Segment::factory()->for($script)->create(['sequence' => $sequence]);
@@ -87,8 +81,7 @@ class SegmentManagementTest extends TestCase
         $this->getJson("$base?page=0")->assertUnprocessable();
     }
 
-    public function test_sequences_are_unique_including_soft_deleted_and_can_be_reused_in_other_scripts(): void
-    {
+    public function test_sequences_are_unique_including_soft_deleted_and_can_be_reused_in_other_scripts(): void {
         $script = Script::factory()->create();
         $other = Script::factory()->for($script->project)->create();
         $this->actingAs($script->project->user, 'web');
@@ -100,8 +93,7 @@ class SegmentManagementTest extends TestCase
         $this->postJson($base, $this->payload())->assertUnprocessable()->assertJsonValidationErrors('sequence');
     }
 
-    public function test_other_users_and_wrong_parent_combinations_cannot_access_segments(): void
-    {
+    public function test_other_users_and_wrong_parent_combinations_cannot_access_segments(): void {
         $segment = Segment::factory()->create();
         $owner = $segment->script->project->user;
         $foreign = Segment::factory()->create();
@@ -127,8 +119,7 @@ class SegmentManagementTest extends TestCase
     }
 
     /** @return array<string, array{array<string, mixed>, string}> */
-    public static function invalidInputs(): array
-    {
+    public static function invalidInputs(): array {
         return [
             'zero sequence' => [['sequence' => 0], 'sequence'],
             'fractional sequence' => [['sequence' => 1.5], 'sequence'],
@@ -146,8 +137,7 @@ class SegmentManagementTest extends TestCase
     }
 
     #[DataProvider('invalidInputs')]
-    public function test_validation_blocks_bad_creates_and_updates(array $overrides, string $field): void
-    {
+    public function test_validation_blocks_bad_creates_and_updates(array $overrides, string $field): void {
         $segment = Segment::factory()->create();
         $this->actingAs($segment->script->project->user, 'web');
         $base = "/api/projects/{$segment->script->project_id}/scripts/{$segment->script_id}/segments";
@@ -155,8 +145,7 @@ class SegmentManagementTest extends TestCase
         $this->putJson("$base/{$segment->id}", $this->payload(['version' => 1, ...$overrides]))->assertUnprocessable()->assertJsonValidationErrors($field);
     }
 
-    public function test_stale_version_cannot_overwrite_a_saved_translation(): void
-    {
+    public function test_stale_version_cannot_overwrite_a_saved_translation(): void {
         $segment = Segment::factory()->create();
         $this->actingAs($segment->script->project->user, 'web');
         $url = "/api/projects/{$segment->script->project_id}/scripts/{$segment->script_id}/segments/{$segment->id}";
@@ -165,8 +154,7 @@ class SegmentManagementTest extends TestCase
         $this->getJson($url)->assertJsonPath('data.final_translation', '保存済み');
     }
 
-    public function test_source_changes_need_reconfirmation_and_recalculate_words(): void
-    {
+    public function test_source_changes_need_reconfirmation_and_recalculate_words(): void {
         $segment = Segment::factory()->create(['source_text' => 'One two', 'final_translation' => '訳', 'final_source_version' => 1, 'status' => 'completed']);
         $this->actingAs($segment->script->project->user, 'web');
         $url = "/api/projects/{$segment->script->project_id}/scripts/{$segment->script_id}/segments/{$segment->id}";
@@ -178,8 +166,7 @@ class SegmentManagementTest extends TestCase
         $this->putJson($url, $this->payload(['version' => 2, 'source_text' => 'One two three', 'final_translation' => '訳', 'status' => 'completed']))->assertJsonPath('data.final_source_version', 2)->assertJsonPath('data.status', 'completed');
     }
 
-    public function test_script_and_project_deletions_hide_descendants(): void
-    {
+    public function test_script_and_project_deletions_hide_descendants(): void {
         $segment = Segment::factory()->create();
         $this->actingAs($segment->script->project->user, 'web');
         $this->deleteJson("/api/projects/{$segment->script->project_id}/scripts/{$segment->script_id}")->assertNoContent();

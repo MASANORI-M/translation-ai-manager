@@ -10,24 +10,20 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
-class ScriptManagementTest extends TestCase
-{
+class ScriptManagementTest extends TestCase {
     use RefreshDatabase;
 
-    protected function setUp(): void
-    {
+    protected function setUp(): void {
         parent::setUp();
-        $this->withHeaders(['Origin' => 'http://localhost:5173']);
+        $this->withHeaders(['Origin' => 'http://localhost:3000']);
     }
 
     /** @return array<string, mixed> */
-    private function payload(array $overrides = []): array
-    {
+    private function payload(array $overrides = []): array {
         return [...['title' => 'Video #001', 'word_count' => 4500, 'deadline' => '2026-10-10', 'status' => 'pending'], ...$overrides];
     }
 
-    public function test_all_endpoints_require_authentication(): void
-    {
+    public function test_all_endpoints_require_authentication(): void {
         $script = Script::factory()->create();
         $url = "/api/projects/{$script->project_id}/scripts";
         $this->getJson($url)->assertUnauthorized();
@@ -37,8 +33,7 @@ class ScriptManagementTest extends TestCase
         $this->deleteJson("$url/{$script->id}")->assertUnauthorized();
     }
 
-    public function test_owner_can_create_list_read_update_and_soft_delete(): void
-    {
+    public function test_owner_can_create_list_read_update_and_soft_delete(): void {
         $project = Project::factory()->create(['rate' => '1.80']);
         $url = "/api/projects/{$project->id}/scripts";
         $this->actingAs($project->user, 'web');
@@ -54,8 +49,7 @@ class ScriptManagementTest extends TestCase
         $this->getJson($url)->assertJsonCount(0, 'data');
     }
 
-    public function test_list_is_paginated_and_contains_only_the_requested_project(): void
-    {
+    public function test_list_is_paginated_and_contains_only_the_requested_project(): void {
         $project = Project::factory()->create();
         Script::factory()->count(23)->for($project)->create();
         Script::factory()->create();
@@ -64,8 +58,7 @@ class ScriptManagementTest extends TestCase
         $this->getJson("/api/projects/{$project->id}/scripts?page=0")->assertUnprocessable();
     }
 
-    public function test_other_users_cannot_access_any_script_endpoint(): void
-    {
+    public function test_other_users_cannot_access_any_script_endpoint(): void {
         $script = Script::factory()->create();
         $url = "/api/projects/{$script->project_id}/scripts";
         $this->actingAs(User::factory()->create(), 'web');
@@ -77,8 +70,7 @@ class ScriptManagementTest extends TestCase
         $this->assertDatabaseHas('scripts', ['id' => $script->id, 'deleted_at' => null]);
     }
 
-    public function test_wrong_parent_is_rejected_even_when_both_projects_have_the_same_owner(): void
-    {
+    public function test_wrong_parent_is_rejected_even_when_both_projects_have_the_same_owner(): void {
         $project = Project::factory()->create();
         $other = Project::factory()->for($project->user)->create();
         $script = Script::factory()->for($other)->create();
@@ -94,8 +86,7 @@ class ScriptManagementTest extends TestCase
     }
 
     /** @return array<string, array{array<string, mixed>, string}> */
-    public static function invalidInputs(): array
-    {
+    public static function invalidInputs(): array {
         return [
             'empty title' => [['title' => '  '], 'title'], 'long title' => [['title' => str_repeat('a', 256)], 'title'],
             'missing words' => [['word_count' => null], 'word_count'], 'negative words' => [['word_count' => -1], 'word_count'], 'fractional words' => [['word_count' => 1.5], 'word_count'], 'overflow' => [['word_count' => 4294967296], 'word_count'],
@@ -105,8 +96,7 @@ class ScriptManagementTest extends TestCase
     }
 
     #[DataProvider('invalidInputs')]
-    public function test_invalid_create_and_update_do_not_write(array $overrides, string $field): void
-    {
+    public function test_invalid_create_and_update_do_not_write(array $overrides, string $field): void {
         $script = Script::factory()->create();
         $url = "/api/projects/{$script->project_id}/scripts";
         $this->actingAs($script->project->user, 'web');
@@ -117,8 +107,7 @@ class ScriptManagementTest extends TestCase
     }
 
     /** @return array<string, array{string, string, int, string, ?string}> */
-    public static function payments(): array
-    {
+    public static function payments(): array {
         return [
             'per 100' => ['per_100_words', '1.80', 4500, 'USD', '81.00'], 'per word' => ['per_word', '0.02', 4500, 'USD', '90.00'], 'fixed' => ['fixed', '123.456', 0, 'USD', '123.46'], 'hourly' => ['hourly', '20', 4500, 'USD', null],
             'zero' => ['per_word', '1.80', 0, 'USD', '0.00'], 'half cent' => ['per_100_words', '0.50', 1, 'USD', '0.01'], 'JPY' => ['per_word', '0.50', 1, 'JPY', '1'], 'three digits' => ['fixed', '1.2345', 0, 'KWD', '1.235'],
@@ -126,20 +115,17 @@ class ScriptManagementTest extends TestCase
     }
 
     #[DataProvider('payments')]
-    public function test_payment_is_precise(string $type, string $rate, int $words, string $currency, ?string $expected): void
-    {
+    public function test_payment_is_precise(string $type, string $rate, int $words, string $currency, ?string $expected): void {
         $project = Project::factory()->create(['rate_type' => $type, 'rate' => $rate, 'currency' => $currency]);
         $this->actingAs($project->user, 'web')->postJson("/api/projects/{$project->id}/scripts", $this->payload(['word_count' => $words]))->assertCreated()->assertJsonPath('data.estimated_payment', $expected);
     }
 
-    public function test_maximum_decimal_payment_without_sqlite_numeric_coercion(): void
-    {
+    public function test_maximum_decimal_payment_without_sqlite_numeric_coercion(): void {
         $script = new Script(['rate_type' => 'per_word', 'rate' => '999999999999.999999', 'word_count' => 4294967295, 'currency' => 'USD']);
         $this->assertSame('4294967294999999995705.03', app(EstimatedPayment::class)->calculate($script));
     }
 
-    public function test_project_rate_changes_preserve_existing_contract_and_new_scripts_use_current_rate(): void
-    {
+    public function test_project_rate_changes_preserve_existing_contract_and_new_scripts_use_current_rate(): void {
         $project = Project::factory()->create(['rate' => '1.80']);
         $url = "/api/projects/{$project->id}/scripts";
         $this->actingAs($project->user, 'web');
@@ -150,8 +136,7 @@ class ScriptManagementTest extends TestCase
         $this->postJson($url, $this->payload())->assertJsonPath('data.estimated_payment', '90.00');
     }
 
-    public function test_status_dates_are_automatic_preserved_and_cleared_on_reopening(): void
-    {
+    public function test_status_dates_are_automatic_preserved_and_cleared_on_reopening(): void {
         $script = Script::factory()->create();
         $this->actingAs($script->project->user, 'web');
         $url = "/api/projects/{$script->project_id}/scripts/{$script->id}";
@@ -168,8 +153,7 @@ class ScriptManagementTest extends TestCase
         $this->putJson($url, $this->payload(['status' => 'completed']))->assertJsonPath('data.completed_at', now()->toISOString());
     }
 
-    public function test_explicit_dates_and_creation_in_progress_or_completed_are_supported(): void
-    {
+    public function test_explicit_dates_and_creation_in_progress_or_completed_are_supported(): void {
         $project = Project::factory()->create();
         $this->actingAs($project->user, 'web');
         $url = "/api/projects/{$project->id}/scripts";
@@ -177,8 +161,7 @@ class ScriptManagementTest extends TestCase
         $this->postJson($url, $this->payload(['status' => 'completed', 'started_at' => '2026-01-01T00:00:00Z', 'completed_at' => '2026-01-02T00:00:00Z']))->assertCreated()->assertJsonPath('data.started_at', '2026-01-01T00:00:00.000000Z')->assertJsonPath('data.completed_at', '2026-01-02T00:00:00.000000Z');
     }
 
-    public function test_project_deletion_soft_deletes_scripts_and_blocks_all_nested_access(): void
-    {
+    public function test_project_deletion_soft_deletes_scripts_and_blocks_all_nested_access(): void {
         $script = Script::factory()->create();
         $project = $script->project;
         $this->actingAs($project->user, 'web');

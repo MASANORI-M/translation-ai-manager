@@ -6,16 +6,13 @@ use App\Models\Script;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
-class ScriptRequest extends FormRequest
-{
-    public function authorize(): bool
-    {
+class ScriptRequest extends FormRequest {
+    public function authorize(): bool {
         return $this->user() !== null;
     }
 
     /** @return array<string, array<mixed>> */
-    public function rules(): array
-    {
+    public function rules(): array {
         return [
             'project_id' => ['missing'], 'user_id' => ['missing'],
             'rate' => ['missing'], 'rate_type' => ['missing'], 'currency' => ['missing'],

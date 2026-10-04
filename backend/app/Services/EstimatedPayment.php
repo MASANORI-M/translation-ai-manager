@@ -4,10 +4,8 @@ namespace App\Services;
 
 use App\Models\Script;
 
-class EstimatedPayment
-{
-    public function calculate(Script $script): ?string
-    {
+class EstimatedPayment {
+    public function calculate(Script $script): ?string {
         if ($script->rate_type === 'hourly') {
             return null;
         }

@@ -1,16 +1,17 @@
-import { SegmentFormPage } from './features/segments/SegmentFormPage'
-import { TranslationEditorPage } from './features/segments/TranslationEditorPage'
-import { ScriptFormPage } from './features/scripts/ScriptFormPage'
-import { ScriptDetailPage } from './features/scripts/ScriptDetailPage'
+import { SegmentFormPage } from './pages/segments/SegmentFormPage'
+import { TranslationEditorPage } from './pages/translation/TranslationEditorPage'
+import { ScriptFormPage } from './pages/scripts/ScriptFormPage'
+import { ScriptDetailPage } from './pages/scripts/ScriptDetailPage'
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { AppLayout } from './components/AppLayout'
-import { ProjectListPage } from './features/projects/ProjectListPage'
-import { ProjectFormPage } from './features/projects/ProjectFormPage'
-import { ProjectDetailPage } from './features/projects/ProjectDetailPage'
-import { AuthGate } from './features/auth/AuthGate'
-import { AuthPage } from './features/auth/AuthPage'
-import { DashboardPage } from './features/auth/DashboardPage'
-import { useAuth } from './features/auth/useAuth'
+import { ProjectListPage } from './pages/projects/ProjectListPage'
+import { ProjectFormPage } from './pages/projects/ProjectFormPage'
+import { ProjectDetailPage } from './pages/projects/ProjectDetailPage'
+import { GlossaryPage } from './pages/glossary/GlossaryPage'
+import { AuthGate } from './components/auth/AuthGate'
+import { AuthPage } from './pages/auth/AuthPage'
+import { DashboardPage } from './pages/auth/DashboardPage'
+import { useAuth } from './hooks/useAuth'
 
 export default function App() {
   const { status, error, retry, user } = useAuth()
@@ -32,6 +33,7 @@ export default function App() {
           <Route path="/projects" element={<ProjectListPage />} />
           <Route path="/projects/new" element={<ProjectFormPage key="new" />} />
           <Route path="/projects/:id" element={<ProjectDetailPage key={location.pathname} />} />
+          <Route path="/projects/:projectId/glossary" element={<GlossaryPage key={location.pathname} />} />
           <Route path="/projects/:projectId/scripts/new" element={<ScriptFormPage key={location.pathname} />} />
           <Route path="/projects/:projectId/scripts/:scriptId" element={<ScriptDetailPage key={location.pathname} />} />
           <Route path="/projects/:projectId/scripts/:scriptId/editor" element={<TranslationEditorPage key={location.pathname} />} />
@@ -39,6 +41,7 @@ export default function App() {
           <Route path="/projects/:projectId/scripts/:scriptId/segments/:segmentId/edit" element={<SegmentFormPage key={location.pathname} editing />} />
           <Route path="/projects/:projectId/scripts/:scriptId/edit" element={<ScriptFormPage key={location.pathname} editing />} />
           <Route path="/projects/:id/edit" element={<ProjectFormPage key={location.pathname} editing />} />
+          <Route path="/projects/edit/:id" element={<ProjectFormPage key={location.pathname} editing />} />
         </Route>
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />

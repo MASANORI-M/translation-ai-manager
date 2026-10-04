@@ -6,11 +6,9 @@ use App\Services\EstimatedPayment;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class ScriptResource extends JsonResource
-{
+class ScriptResource extends JsonResource {
     /** @return array<string, mixed> */
-    public function toArray(Request $request): array
-    {
+    public function toArray(Request $request): array {
         return [
             'id' => $this->id, 'project_id' => $this->project_id, 'title' => $this->title,
             'word_count' => $this->word_count, 'deadline' => $this->deadline?->format('Y-m-d'),

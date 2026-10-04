@@ -1,6 +1,8 @@
 <?php
 
+use App\Http\Controllers\AiGenerationController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\GlossaryController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ScriptController;
 use App\Http\Controllers\SegmentController;
@@ -31,6 +33,11 @@ Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanc
 Route::get('/user', [AuthController::class, 'user'])->middleware('auth:sanctum');
 
 Route::middleware('auth:sanctum')->group(function (): void {
+    Route::apiResource('projects.glossaries', GlossaryController::class)->only(['index', 'store', 'update', 'destroy'])->whereNumber(['project', 'glossary']);
+    Route::get('/ai/models', [AiGenerationController::class, 'models']);
+    Route::post('/projects/{project}/scripts/{script}/segments/{segment}/ai-translate', [AiGenerationController::class, 'store'])->whereNumber(['project', 'script', 'segment'])->middleware('throttle:ai-translation');
+    Route::get('/projects/{project}/scripts/{script}/segments/{segment}/ai-generations', [AiGenerationController::class, 'index'])->whereNumber(['project', 'script', 'segment']);
+    Route::post('/projects/{project}/scripts/{script}/segments/{segment}/ai-generations/{generation}/select', [AiGenerationController::class, 'select'])->whereNumber(['project', 'script', 'segment', 'generation']);
     Route::apiResource('projects.scripts.segments', SegmentController::class)->only(['index', 'store', 'show', 'update', 'destroy'])->whereNumber(['project', 'script', 'segment']);
     Route::apiResource('projects.scripts', ScriptController::class)->only(['index', 'store', 'show', 'update', 'destroy'])->whereNumber(['project', 'script']);
     Route::get('/projects', [ProjectController::class, 'index']);

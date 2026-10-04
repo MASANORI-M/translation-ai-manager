@@ -7,10 +7,8 @@ use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use RuntimeException;
 
-class TestUserSeeder extends Seeder
-{
-    public function run(): void
-    {
+class TestUserSeeder extends Seeder {
+    public function run(): void {
         if (! app()->environment(['local', 'testing'])) {
             throw new RuntimeException('Test users may only be seeded in local or testing environments.');
         }

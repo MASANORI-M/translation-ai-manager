@@ -10,12 +10,10 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
-class AuthService
-{
+class AuthService {
     public function __construct(private UserRepository $users) {}
 
-    public function register(string $email, string $password): User
-    {
+    public function register(string $email, string $password): User {
         $user = $this->users->create([
             'name' => Str::limit(Str::before($email, '@'), 100, ''),
             'email' => $email,
@@ -27,8 +25,7 @@ class AuthService
         return $user;
     }
 
-    public function login(string $email, string $password): User
-    {
+    public function login(string $email, string $password): User {
         $user = $this->users->findByEmail($email);
 
         if ($user === null) {
@@ -46,8 +43,7 @@ class AuthService
         return $user;
     }
 
-    public function currentUser(): User
-    {
+    public function currentUser(): User {
         $user = Auth::guard('web')->user();
 
         if (! $user instanceof User) {
@@ -57,8 +53,7 @@ class AuthService
         return $user;
     }
 
-    public function logout(): void
-    {
+    public function logout(): void {
         Auth::guard('web')->logout();
     }
 }

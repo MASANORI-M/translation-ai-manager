@@ -9,12 +9,10 @@ use Illuminate\Support\Facades\Hash;
 use RuntimeException;
 use Tests\TestCase;
 
-class TestUserSeederTest extends TestCase
-{
+class TestUserSeederTest extends TestCase {
     use RefreshDatabase;
 
-    public function test_seeder_creates_the_configured_account_without_overwriting_it_on_rerun(): void
-    {
+    public function test_seeder_creates_the_configured_account_without_overwriting_it_on_rerun(): void {
         config(['test_user.email' => 'local-test@example.com', 'test_user.password' => 'test-password']);
         $this->seed(TestUserSeeder::class);
         $firstHash = User::query()->firstOrFail()->password;
@@ -27,15 +25,13 @@ class TestUserSeederTest extends TestCase
         $this->assertSame($firstHash, $user->password);
     }
 
-    public function test_seeder_requires_configuration(): void
-    {
+    public function test_seeder_requires_configuration(): void {
         config(['test_user.email' => null, 'test_user.password' => null]);
         $this->expectException(RuntimeException::class);
         $this->seed(TestUserSeeder::class);
     }
 
-    public function test_seeder_cannot_run_in_production(): void
-    {
+    public function test_seeder_cannot_run_in_production(): void {
         $this->app['env'] = 'production';
         $this->expectException(RuntimeException::class);
         app(TestUserSeeder::class)->run();

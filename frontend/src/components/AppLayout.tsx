@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
-import { useAuth } from '../features/auth/useAuth'
+import { useAuth } from '../hooks/useAuth'
 
 export function AppLayout() {
   const { user, logout } = useAuth()
@@ -21,7 +21,7 @@ export function AppLayout() {
       <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-5 px-6 py-5">
         <NavLink to="/dashboard" className="text-lg font-semibold tracking-tight">Translation AI Manager</NavLink>
         <nav aria-label="メインナビゲーション" className="flex gap-4 text-sm">
-          {[['/dashboard', 'Dashboard'], ['/projects', 'Projects']].map(([to, title]) => <NavLink key={to} to={to} className={({ isActive }) => isActive ? 'font-semibold text-sky-700' : 'text-slate-600 hover:text-sky-700'}>{title}</NavLink>)}
+          {[['/dashboard', 'ダッシュボード'], ['/projects', 'PROJECTS']].map(([to, title]) => <NavLink key={to} to={to} className={({ isActive }) => isActive ? 'font-semibold text-sky-700' : 'text-slate-600 hover:text-sky-700'}>{title}</NavLink>)}
         </nav>
         <div className="flex flex-wrap items-center gap-4 sm:ml-auto">
           <span className="break-all text-sm text-slate-500">{user?.email}</span>

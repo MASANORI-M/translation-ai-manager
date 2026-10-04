@@ -5,11 +5,9 @@ namespace App\Http\Resources;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class SegmentResource extends JsonResource
-{
+class SegmentResource extends JsonResource {
     /** @return array<string, mixed> */
-    public function toArray(Request $request): array
-    {
+    public function toArray(Request $request): array {
         return [
             'id' => $this->id,
             'script_id' => $this->script_id,
@@ -18,7 +16,18 @@ class SegmentResource extends JsonResource
             'timecode_end' => $this->timecode($this->timecode_end_ms),
             'emotion' => $this->emotion_direction,
             'source_text' => $this->source_text,
-            'ai_translation' => null,
+            'ai_translation' => $this->ai_translation,
+            'ai_generation_id' => $this->ai_generation_id,
+            'ai_source_version' => $this->ai_source_version,
+            'ai_generation' => $this->whenLoaded('aiGeneration', fn (): array => [
+                'id' => $this->aiGeneration->id,
+                'model' => $this->aiGeneration->model,
+                'model_name' => $this->aiGeneration->model_name,
+                'created_at' => $this->aiGeneration->created_at,
+                'selected' => $this->aiGeneration->selected,
+                'total_tokens' => $this->aiGeneration->total_tokens,
+                'total_cost' => $this->aiGeneration->total_cost,
+            ]),
             'final_translation' => $this->final_translation,
             'memo' => $this->memo,
             'status' => $this->status,
@@ -30,8 +39,7 @@ class SegmentResource extends JsonResource
         ];
     }
 
-    private function timecode(?int $milliseconds): ?string
-    {
+    private function timecode(?int $milliseconds): ?string {
         if ($milliseconds === null) {
             return null;
         }

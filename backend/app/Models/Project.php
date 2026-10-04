@@ -10,9 +10,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-#[Fillable(['user_id', 'name', 'client_name', 'description', 'translation_style', 'translation_rules', 'rate_type', 'rate', 'currency', 'status'])]
-class Project extends Model
-{
+#[Fillable(['user_id', 'name', 'client_name', 'description', 'translation_style', 'translation_rules', 'rate_type', 'rate', 'currency', 'usd_jpy_rate', 'status'])]
+class Project extends Model {
     /** @use HasFactory<ProjectFactory> */
     use HasFactory, SoftDeletes;
 
@@ -20,18 +19,19 @@ class Project extends Model
 
     public const STATUSES = ['active', 'paused', 'completed', 'archived'];
 
-    protected function casts(): array
-    {
-        return ['rate' => 'decimal:6'];
+    protected function casts(): array {
+        return ['rate' => 'decimal:6', 'usd_jpy_rate' => 'decimal:6'];
     }
 
-    public function scripts(): HasMany
-    {
+    public function scripts(): HasMany {
         return $this->hasMany(Script::class);
     }
 
-    public function user(): BelongsTo
-    {
+    public function glossaries(): HasMany {
+        return $this->hasMany(Glossary::class);
+    }
+
+    public function user(): BelongsTo {
         return $this->belongsTo(User::class);
     }
 }
