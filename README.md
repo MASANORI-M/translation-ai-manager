@@ -1,3 +1,5 @@
+Note: The English translation is provided after the Japanese text. 
+
 # Translation AI Manager
 
 ## 概要
